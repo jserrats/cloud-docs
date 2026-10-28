@@ -1,0 +1,22 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: box
+  namespace: traefik
+spec:
+  type: ExternalName
+  externalName: box.lan
+---
+# Home automation, off the cluster.
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: box
+  namespace: traefik
+spec:
+  routes:
+    - kind: Rule
+      match: {{ include "ingress.hosts" (list $ "app") }}
+      services:
+        - name: box
+          port: 8123

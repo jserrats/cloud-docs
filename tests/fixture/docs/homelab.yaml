@@ -1,0 +1,61 @@
+networks:
+  # The main LAN.
+  lan:
+    type: vlan
+    vlan_id: 10
+    subnet: 10.1.0.0/24
+    gateway: 10.1.0.1
+    dns_suffix: .lan
+  things:
+    type: vlan
+    vlan_id: null
+    subnet: null
+
+machines:
+  # The hypervisor box.
+  pve:
+    type: physical
+    model: Mini PC
+    disks:
+      - name: a
+        size: 4 TB
+      - name: b
+        size: 4 TB
+    pools:
+      - name: data
+        type: zfs mirror
+        disks: [a, b]
+        mountpoint: /srv
+    interfaces:
+      - network: lan
+        hostname: pve.lan
+        ip: 10.1.0.2
+        assignment: static
+    services:
+      - name: Proxmox UI
+        port: 8006
+        protocol: https
+  vm1:
+    type: vm
+    interfaces:
+      - network: lan
+        ip: 10.1.0.11
+  # Home automation, which no code manages.
+  box:
+    type: physical
+    interfaces:
+      - network: things
+        hostname: box.lan
+    services:
+      - name: Home Assistant
+        port: 8123
+        protocol: http
+
+variables:
+  # Everything under docker/, unless something closer says otherwise.
+  docker:
+    DOMAIN: wrong.example.com
+    MEDIA: /srv/data/media
+  # Set on the web stack in the deploy tool.
+  docker/vm1/web:
+    DOMAIN: example.com

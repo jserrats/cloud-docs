@@ -1,0 +1,14 @@
+# ClusterIP only: the UI is meant to be reached through an ingress.
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "cloud-docs.fullname" . }}
+  labels:
+    {{- include "cloud-docs.labels" . | nindent 4 }}
+spec:
+  selector:
+    {{- include "cloud-docs.selectorLabels" . | nindent 4 }}
+  ports:
+    - name: http
+      port: {{ .Values.service.port }}
+      targetPort: http

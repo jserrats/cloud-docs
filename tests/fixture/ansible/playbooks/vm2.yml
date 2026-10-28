@@ -1,0 +1,5 @@
+- name: k3s
+  hosts: k3s
+  roles:
+    - k3s
+    - gw

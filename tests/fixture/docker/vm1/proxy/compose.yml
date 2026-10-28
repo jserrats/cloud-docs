@@ -1,0 +1,16 @@
+# Traefik on vm1.
+services:
+  traefik:
+    image: traefik:v3
+    ports:
+      - "443:443"
+    environment:
+      CF_TOKEN: ${CF_API_TOKEN:?secret}
+    networks: [proxy]
+    labels:
+      traefik.http.routers.dash.rule: Host(`traefik.${DOMAIN}`)
+      traefik.http.routers.dash.service: api@internal
+
+networks:
+  proxy:
+    external: true

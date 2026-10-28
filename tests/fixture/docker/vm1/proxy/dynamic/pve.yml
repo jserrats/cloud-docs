@@ -1,0 +1,10 @@
+http:
+  routers:
+    pve:
+      rule: Host(`pve.{{ env "DOMAIN" }}`)
+      service: pve
+  services:
+    pve:
+      loadBalancer:
+        servers:
+          - url: https://pve.lan:8006

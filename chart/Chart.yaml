@@ -1,0 +1,6 @@
+apiVersion: v2
+name: cloud-docs
+description: An interactive map of a repository's infrastructure code, rebuilt on every commit
+type: application
+version: 0.1.0
+appVersion: "latest"

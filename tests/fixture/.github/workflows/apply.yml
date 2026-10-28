@@ -1,0 +1,21 @@
+name: apply
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    environment: deploy
+    strategy:
+      matrix:
+        stack: [stacks/edge]
+    steps:
+      - uses: actions/checkout@v6
+      # Reads the token from SSM.
+      - name: token
+        env:
+          PARAMETER: /edge/token
+        run: aws ssm get-parameter --name "$PARAMETER"
+      - run: echo ${{ vars.ROLE_ARN }}

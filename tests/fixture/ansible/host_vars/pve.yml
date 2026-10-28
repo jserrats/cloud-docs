@@ -1,0 +1,18 @@
+proxmox_dir_mappings:
+  - id: data
+    path: /srv/data
+
+proxmox_vms:
+  - vmid: 101
+    name: vm1
+    memory: 2048
+    disk_size: 16G
+    data_disk_gb: 50
+    shared_dirs: [data]
+  - vmid: 102
+    name: vm2
+    memory: 4096
+    disk_size: 32G
+    data_disk_gb: 60
+    shared_dirs: [data]
+    # A trailing comment that belongs to vm2.

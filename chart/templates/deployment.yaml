@@ -1,0 +1,147 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "cloud-docs.fullname" . }}
+  labels:
+    {{- include "cloud-docs.labels" . | nindent 4 }}
+  annotations:
+    # The Infisical operator restarts the pod when the deploy key changes.
+    secrets.infisical.com/auto-reload: "true"
+spec:
+  # One pod: the map is rebuilt from git in memory, so a second would only
+  # repeat the work.
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "cloud-docs.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "cloud-docs.labels" . | nindent 8 }}
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        # git-sync's group, so it can write the checkout volume and read the
+        # key, and the app can read the checkout.
+        fsGroup: 65533
+        seccompProfile:
+          type: RuntimeDefault
+      initContainers:
+        # ssh wants the key in a file of its own user's, ending in a newline,
+        # and a key pasted into a secrets manager often loses the newline.
+        - name: ssh-key
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          command:
+            - python
+            - -c
+            - |
+              import os, shutil
+              key = open("/secret/key").read().replace("\r\n", "\n").strip() + "\n"
+              fd = os.open("/git-secret/ssh", os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o400)
+              os.write(fd, key.encode())
+              os.close(fd)
+              shutil.copy("/known-hosts/known_hosts", "/git-secret/known_hosts")
+          securityContext:
+            runAsUser: 65533
+            runAsGroup: 65533
+            readOnlyRootFilesystem: true
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: [ALL]
+          volumeMounts:
+            - name: ssh-key
+              mountPath: /secret
+              readOnly: true
+            - name: known-hosts
+              mountPath: /known-hosts
+              readOnly: true
+            - name: git-secret
+              mountPath: /git-secret
+      containers:
+        # Keeps /repo/current pointing at the newest commit of the branch.
+        - name: git-sync
+          image: {{ .Values.gitSync.image }}
+          args:
+            - --repo={{ required "repo.url is required" .Values.repo.url }}
+            - --ref={{ .Values.repo.branch }}
+            - --root=/repo
+            - --link=current
+            - --depth=1
+            - --period={{ .Values.repo.period }}
+            - --ssh-key-file=/etc/git-secret/ssh
+            - --ssh-known-hosts=true
+            - --ssh-known-hosts-file=/etc/git-secret/known_hosts
+          securityContext:
+            runAsUser: 65533
+            runAsGroup: 65533
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: [ALL]
+          volumeMounts:
+            - name: repo
+              mountPath: /repo
+            - name: git-secret
+              mountPath: /etc/git-secret
+              readOnly: true
+          resources:
+            {{- toYaml .Values.gitSyncResources | nindent 12 }}
+        - name: app
+          image: "{{ .Values.image.repository }}:{{ required "image.tag is required: pin sha-<commit>" .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          env:
+            - name: REPO_LINK
+              value: /repo/current
+            - name: REPO_URL
+              value: {{ .Values.repo.url | quote }}
+            - name: DATA_DIR
+              value: /data
+            - name: PORT
+              value: {{ .Values.service.port | quote }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.service.port }}
+          # Ready once the first map is built.
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            periodSeconds: 10
+          livenessProbe:
+            tcpSocket:
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 30
+          securityContext:
+            runAsUser: 65532
+            runAsGroup: 65533
+            readOnlyRootFilesystem: true
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: [ALL]
+          volumeMounts:
+            - name: repo
+              mountPath: /repo
+              readOnly: true
+            - name: data
+              mountPath: /data
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      volumes:
+        - name: repo
+          emptyDir: {}
+        - name: data
+          emptyDir: {}
+        - name: git-secret
+          emptyDir:
+            medium: Memory
+        - name: ssh-key
+          secret:
+            secretName: {{ include "cloud-docs.sshSecret" . }}
+            defaultMode: 0440
+            items:
+              - key: {{ .Values.sshKeySecret.key }}
+                path: key
+        - name: known-hosts
+          configMap:
+            name: {{ include "cloud-docs.fullname" . }}-known-hosts

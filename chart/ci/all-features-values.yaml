@@ -1,0 +1,8 @@
+image:
+  tag: sha-abcdef0
+repo:
+  url: git@github.com:example/infra.git
+infisical:
+  identityId: 00000000-0000-0000-0000-000000000000
+  projectSlug: example
+  envSlug: prod

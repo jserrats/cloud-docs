@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Cloud map</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <h1>Cloud map</h1>
+    <a id="commit" class="commit" target="_blank" rel="noopener"></a>
+    <span id="generated" class="muted"></span>
+    <div class="spacer"></div>
+    <input id="search" type="search" placeholder="Search names, files, comments…" autocomplete="off">
+    <button id="fit" type="button" title="Fit the whole map">Fit</button>
+    <button id="unresolved-toggle" type="button"></button>
+  </header>
+  <main>
+    <nav id="filters" aria-label="Kinds"></nav>
+    <div id="graph" role="img" aria-label="Infrastructure map"></div>
+    <aside id="panel">
+      <div id="details" hidden></div>
+      <div id="unresolved" hidden></div>
+      <div id="intro">
+        <p>Everything here is read from the repository on every commit to its main branch: Terraform,
+          Ansible, compose files, ArgoCD and GitHub Actions.</p>
+        <p>Click an item for its attributes, the comments written next to it, and links to where it is
+          declared. Boxes nest by where things run.</p>
+        <p class="muted">Lists of things the code names but never declares are under <b>Unresolved</b>.</p>
+      </div>
+    </aside>
+  </main>
+  <div id="error" hidden></div>
+  <script src="app.js"></script>
+</body>
+</html>

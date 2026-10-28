@@ -1,0 +1,19 @@
+services:
+  # The web app.
+  web:
+    image: nginx:1
+    volumes:
+      - html:/usr/share/nginx/html
+      - /srv/data/www:/www:ro
+      - ${MEDIA}:/media
+    networks: [proxy]
+    labels:
+      traefik.http.routers.web.rule: Host(`web.${DOMAIN}`)
+      traefik.http.services.web.loadbalancer.server.port: "80"
+
+volumes:
+  html:
+
+networks:
+  proxy:
+    external: true

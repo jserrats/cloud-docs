@@ -1,0 +1,12 @@
+all:
+  children:
+    # The hypervisor.
+    hv:
+      hosts:
+        pve: # pve.lan
+    compose:
+      hosts:
+        vm1:
+    k3s:
+      hosts:
+        vm2:

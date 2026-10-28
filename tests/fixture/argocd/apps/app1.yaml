@@ -1,0 +1,11 @@
+# App one, a local chart.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: app1
+spec:
+  source:
+    repoURL: git@github.com:o/r.git
+    path: argocd/app1
+  destination:
+    namespace: app1

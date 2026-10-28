@@ -1,0 +1,10 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: root
+spec:
+  source:
+    repoURL: git@github.com:o/r.git
+    path: argocd/apps
+  destination:
+    namespace: argocd

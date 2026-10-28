@@ -1,0 +1,61 @@
+image:
+  repository: ghcr.io/jserrats/cloud-docs
+  # Pin sha-<commit> in the ArgoCD Application. ArgoCD only redeploys when the
+  # rendered manifests change, so it never notices a moving tag.
+  tag: ""
+  pullPolicy: IfNotPresent
+
+nameOverride: ""
+fullnameOverride: ""
+
+# The repository the map is drawn from. Required: the chart holds no default,
+# because the app knows nothing about any repository until it is told.
+repo:
+  # SSH URL; the deploy key below must be registered on it.
+  url: ""
+  branch: main
+  # How often git-sync looks for a new commit.
+  period: 60s
+
+gitSync:
+  image: registry.k8s.io/git-sync/git-sync:v4.7.1
+  # GitHub's SSH host keys, from `gh api meta --jq '.ssh_keys[]'`. Public.
+  knownHosts: |
+    github.com ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl
+    github.com ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBEmKSENjQEezOmxkZMy7opKgwFB9nkt5YRrYMjNuG5N87uRgg6CLrbo5wAdT/y6v0mKV0U2w0WZ2YB/++Tpockg=
+    github.com ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQCj7ndNxQowgcQnjshcLrqPEiiphnt+VTTvDP6mHBL9j1aNUkY4Ue1gvwnGLVlOhGeYrnZaMgRK6+PKCUXaDbC7qtbW8gIkhL7aGCsOr/C56SJMy/BCZfxd1nWzAOxSDPgVsmerOBYfNqltV9/hWCqBywINIR+5dIg6JTJ72pcEpEjcYgXkE2YEFXV1JHnsKgbLWNlhScqb2UmyRkQyytRLtL+38TGxkxCflmO+5Z8CSSNY7GidjMIZ7Q4zMjA2n1nGrlTDkzwDCsw+wqFPGQA179cnfGWOWRVruj16z6XyvxvjJwbz0wQZ75XK5tKSb7FNyeIEs4TT4jk+S4dhPeAUC5y+bDYirYgM4GC7uEnztnZyaVWQ7B381AK4Qdrwt51ZqExKbQpTUNn+EjqoTwvqNj4kqx5QUCI0ThS/YkOxJCXmPUWZbhjpCg56i+2aB6CmK2JGhn57K5mj0MNdBXA4/WnwH6XoPWJzK5Nyu2zB3nAZp+S5hpQs+p1vN1/wsjk=
+
+# The deploy key's private half, as a Secret with the key under sshKeySecret.key.
+# With infisical.identityId set, an InfisicalSecret syncs it from Infisical
+# into that Secret; otherwise the Secret has to exist already.
+sshKeySecret:
+  name: ""          # defaults to the fullname
+  key: SSH_KEY
+
+# The Infisical machine identity and project, the shape argocd/cluster.yaml in
+# jserrats/cloud has, so that file can be passed straight in as a value file.
+infisical:
+  identityId: ""
+  projectSlug: ""
+  envSlug: ""
+  secretsPath: /docs
+  serviceAccount:
+    name: infisical-auth
+    namespace: infisical-operator-system
+
+service:
+  port: 8080
+
+resources:
+  requests:
+    cpu: 20m
+    memory: 96Mi
+  limits:
+    memory: 384Mi
+
+gitSyncResources:
+  requests:
+    cpu: 10m
+    memory: 32Mi
+  limits:
+    memory: 256Mi

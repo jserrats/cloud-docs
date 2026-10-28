@@ -1,0 +1,3 @@
+data_disk_mountpoint: /var/lib/docker/volumes
+docker_networks:
+  - proxy

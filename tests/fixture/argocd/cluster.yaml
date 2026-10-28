@@ -1,0 +1,7 @@
+# Cluster settings.
+domain: k.example.com
+rootDomain: example.com
+infisical:
+  identityId: abc
+  projectSlug: proj
+  envSlug: prod

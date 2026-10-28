@@ -1,0 +1,15 @@
+{
+  "name": "cloud-docs-web",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "esbuild src/main.js --bundle --minify --sourcemap --target=es2022 --outfile=dist/app.js && cp index.html style.css dist/"
+  },
+  "dependencies": {
+    "cytoscape": "3.34.3",
+    "cytoscape-fcose": "2.2.0"
+  },
+  "devDependencies": {
+    "esbuild": "0.28.2"
+  }
+}

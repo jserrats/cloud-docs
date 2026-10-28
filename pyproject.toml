@@ -1,0 +1,17 @@
+[project]
+name = "cloud-docs"
+version = "0.1.0"
+description = "Interactive map of the jserrats/cloud repository, generated from its code"
+requires-python = ">=3.13"
+# Pinned exactly: uv.lock carries the hashes, and the image installs from it.
+dependencies = [
+    "python-hcl2==8.1.4",
+    "ruamel-yaml==0.19.1",
+]
+
+[dependency-groups]
+dev = ["pytest==9.1.1"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
