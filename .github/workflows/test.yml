@@ -24,7 +24,7 @@ jobs:
       # The image installs from requirements.txt; it must say what uv.lock says.
       - name: requirements.txt matches uv.lock
         run: |
-          uv export --frozen --no-dev --no-emit-project --format requirements-txt -q -o /tmp/requirements.txt
+          uv export --frozen --no-header --no-dev --no-emit-project --format requirements-txt -q -o /tmp/requirements.txt
           diff -u requirements.txt /tmp/requirements.txt
 
       - uses: azure/setup-helm@1a275c3b69536ee54be43f2070a358922e12c8d4 # v4.3.1

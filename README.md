@@ -58,7 +58,7 @@ Open pages reload themselves within a few seconds.
 copied into a temporary git repository for each run.
 
 After changing dependencies in `pyproject.toml`, run
-`uv export --no-dev --no-emit-project --format requirements-txt -o requirements.txt`. The image
+`uv export --no-header --no-dev --no-emit-project --format requirements-txt -o requirements.txt`. The image
 installs from that file, with hashes, and CI fails if it drifts from `uv.lock`.
 
 ## Deploying

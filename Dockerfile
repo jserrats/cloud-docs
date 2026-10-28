@@ -8,7 +8,7 @@ RUN npm run build
 
 # The generator and the server: Python, plus git to read the checkout's
 # commit. Dependencies are installed from requirements.txt, which
-# `uv export` writes from uv.lock with hashes.
+# `uv export --no-header` writes from uv.lock with hashes.
 FROM python:3.13.15-slim-trixie
 RUN apt-get update \
  && apt-get install -y --no-install-recommends git \
