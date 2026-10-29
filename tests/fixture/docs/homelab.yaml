@@ -4,12 +4,16 @@ networks:
     type: vlan
     vlan_id: 10
     subnet: 10.1.0.0/24
+    ipv6_subnet: fd00:1::/64
     gateway: 10.1.0.1
+    router: gw
+    dhcp: server
     dns_suffix: .lan
   things:
     type: vlan
     vlan_id: null
     subnet: null
+    router: nowhere
 
 machines:
   # The hypervisor box.
@@ -40,6 +44,10 @@ machines:
     interfaces:
       - network: lan
         ip: 10.1.0.11
+  # The router.
+  gw:
+    type: physical
+    role: gateway
   # Home automation, which no code manages.
   box:
     type: physical

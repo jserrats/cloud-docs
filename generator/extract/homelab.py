@@ -7,7 +7,8 @@ It runs last, because what it adds mostly joins things other extractors found:
   10.0.0.1) turns that referenced host into the machine, ports and all;
 - a network whose subnet an Ansible role lists becomes one node with it;
 - a pool's mountpoint above a shared directory's path ties the share to the
-  pool, and the pool to its disks.
+  pool, and the pool to its disks;
+- a network's `router` ties it to the machine that routes it.
 
 A value the file leaves null is shown as not recorded rather than left out,
 so the gap is visible.
@@ -32,11 +33,20 @@ def extract(repo: Repo, graph: Graph) -> None:
         return
     doc = docs[0]
     networks = entry(repo, FILE, doc.value, "networks", doc.end)
-    for n in entries(repo, FILE, networks.value, networks.end) if networks else []:
+    nets = entries(repo, FILE, networks.value, networks.end) if networks else []
+    for n in nets:
         _network(repo, graph, n)
     machines = entry(repo, FILE, doc.value, "machines", doc.end)
+    hosts = {}
     for m in entries(repo, FILE, machines.value, machines.end) if machines else []:
-        _machine(repo, graph, m)
+        hosts[str(m.key)] = _machine(repo, graph, m)
+    # Routers last: they are machines, which come after the networks.
+    for n in nets:
+        router = (plain(n.value) or {}).get("router")
+        if router in hosts:
+            graph.link(hosts[router], f"net:{n.key}", "routes")
+        elif router:
+            graph.unresolved_ref(router, FILE, n.start, f"the router of {n.key}, a machine homelab.yaml does not list")
 
 
 def _shown(v):
@@ -51,16 +61,21 @@ def _network(repo: Repo, graph: Graph, e) -> None:
     if v.get("subnet"):
         label += f" ({v['subnet']})"
     attrs = {"type": kind, "subnet": _shown(v.get("subnet"))}
+    if v.get("ipv6_subnet"):
+        attrs["ipv6 subnet"] = v["ipv6_subnet"]
     if kind == "vlan":
         attrs.update({"vlan id": _shown(v.get("vlan_id")), "gateway": _shown(v.get("gateway")),
                       "dns suffix": _shown(v.get("dns_suffix"))})
+    for k in ("router", "dhcp", "description"):
+        if v.get(k):
+            attrs[k] = v[k]
     graph.add(Node(nid, "network", label, attrs=attrs, sources=[repo.source(FILE, e.start, e.end)]))
     # The same subnet, as an Ansible role listed it.
     if v.get("subnet") and f"net:cidr:{v['subnet']}" in graph.nodes:
         graph.merge(f"net:cidr:{v['subnet']}", nid)
 
 
-def _machine(repo: Repo, graph: Graph, e) -> None:
+def _machine(repo: Repo, graph: Graph, e) -> str:
     key, v = str(e.key), plain(e.value) or {}
     hid = f"host:{v.get('inventory', key)}"
     kind = "vm" if v.get("type") == "vm" else "host"
@@ -113,6 +128,7 @@ def _machine(repo: Repo, graph: Graph, e) -> None:
                        sources=[repo.source(FILE, e.start, e.end, inner=False, leading=False)]))
 
     _disks(repo, graph, hid, key, v, e)
+    return hid
 
 
 def _absorb(graph: Graph, ref_id: str, hid: str) -> None:

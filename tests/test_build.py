@@ -169,6 +169,9 @@ def test_homelab(graph):
     assert not any(n["id"] == "net:cidr:10.1.0.0/24" for n in graph["nodes"])
     assert edge(graph, "host:vm2", "net:lan")
     assert node(graph, "net:things")["attrs"]["subnet"].startswith("not recorded")
+    assert lan["attrs"]["ipv6 subnet"] == "fd00:1::/64" and lan["attrs"]["dhcp"] == "server"
+    assert edge(graph, "host:gw", "net:lan", "routes")
+    assert any(u["text"] == "nowhere" for u in graph["unresolved"])
 
     pve = node(graph, "host:pve")
     assert pve["attrs"]["physical"] is True and pve["attrs"]["model"] == "Mini PC"
